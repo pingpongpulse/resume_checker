@@ -1,0 +1,172 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 700px;
+                 background-color: #0d1117;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" style="width: 100%; height: 100%;"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 3, "color": {"background": "#7F77DD", "border": "#00FF88"}, "font": {"color": "white"}, "id": "ROLE", "label": "Backend Engineer\n91/100", "shape": "star", "size": 60, "title": "\ud83c\udfaf Backend Engineer \u2014 Fit Score: 91/100"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_python", "label": "python", "shape": "dot", "size": 30, "title": "\u2705 python \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_fastapi", "label": "fastapi", "shape": "dot", "size": 32, "title": "\u2705 fastapi \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_postgresql", "label": "postgresql", "shape": "dot", "size": 34, "title": "\u2705 postgresql \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_docker", "label": "docker", "shape": "dot", "size": 36, "title": "\u2705 docker \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_kubernetes", "label": "kubernetes", "shape": "dot", "size": 38, "title": "\u2705 kubernetes \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_aws", "label": "aws", "shape": "dot", "size": 40, "title": "\u2705 aws \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#1D9E75", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_redis", "label": "redis", "shape": "dot", "size": 42, "title": "\u2705 redis \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "missing_pytest", "label": "pytest", "shape": "dot", "size": 22, "title": "\u274c pytest \u2014 Gap to fill"}, {"borderWidth": 2, "color": {"background": "#0066FF", "border": "#4DA6FF"}, "font": {"color": "white"}, "id": "bonus_rust", "label": "rust", "shape": "dot", "size": 18, "title": "\u2b50 rust \u2014 Extra value"}, {"borderWidth": 2, "color": {"background": "#0066FF", "border": "#4DA6FF"}, "font": {"color": "white"}, "id": "bonus_graphql", "label": "graphql", "shape": "dot", "size": 18, "title": "\u2b50 graphql \u2014 Extra value"}, {"borderWidth": 2, "color": {"background": "#0066FF", "border": "#4DA6FF"}, "font": {"color": "white"}, "id": "bonus_kafka", "label": "kafka", "shape": "dot", "size": 18, "title": "\u2b50 kafka \u2014 Extra value"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_python", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_fastapi", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_postgresql", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_docker", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_kubernetes", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_aws", "width": 1}, {"arrows": "to", "color": "#00FF88", "dashes": false, "from": "ROLE", "to": "matched_redis", "width": 1}, {"arrows": "to", "color": "#FF4D4D", "dashes": true, "from": "ROLE", "to": "missing_pytest", "width": 1}, {"arrows": "to", "color": "#4DA6FF", "dashes": false, "from": "ROLE", "to": "bonus_rust", "width": 1}, {"arrows": "to", "color": "#4DA6FF", "dashes": false, "from": "ROLE", "to": "bonus_graphql", "width": 1}, {"arrows": "to", "color": "#4DA6FF", "dashes": false, "from": "ROLE", "to": "bonus_kafka", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_python", "hidden": false, "to": "matched_fastapi", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_python", "hidden": false, "to": "matched_postgresql", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_fastapi", "hidden": false, "to": "matched_postgresql", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_fastapi", "hidden": false, "to": "matched_docker", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_postgresql", "hidden": false, "to": "matched_docker", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_postgresql", "hidden": false, "to": "matched_kubernetes", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_docker", "hidden": false, "to": "matched_kubernetes", "width": 1}, {"arrows": "to", "color": "#888888", "from": "matched_docker", "hidden": false, "to": "matched_aws", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true, "forceAtlas2Based": {"gravitationalConstant": -26, "centralGravity": 0.3, "springLength": 200, "springConstant": 0.05, "dissuadeHubs": true, "overlap": 0.5}, "maxVelocity": 50, "stabilization": {"enabled": true, "iterations": 200, "fit": true}, "timestep": 0.35, "adaptiveTimestep": true}, "interaction": {"hover": true, "navigationButtons": true, "keyboard": true, "zoomView": true}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+    <style>
+        body {
+            background: #0d1117;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        #title-bar {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 16px 24px;
+            font-size: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0;
+        }
+        #score-badge {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #score-badge::before {
+            content: "📊";
+        }
+        #graph-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+    </style>
+    <div id="title-bar">
+        <span>🧠 Talent Intelligence — Skill Graph</span>
+        <div id="score-badge">91/100 — Strong Fit</div>
+    </div>
+    <div id="graph-container">
+    </body>
+</html>
