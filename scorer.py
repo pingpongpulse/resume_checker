@@ -11,15 +11,23 @@ from dummy_data import (
 )
 
 
-# MOCK — replace with: from utils import skill_similarity when Person 1 is done
-def skill_similarity(a, b):
-    import random
+USING_MODEL_SIMILARITY = True
 
-    random.seed(hash(a + b) % 100)
-    return round(random.uniform(0.3, 0.95), 2)
+try:
+    # Person 1 integration: use the real semantic similarity model.
+    from talent_core.person1.utils import skill_similarity
+except Exception:
+    USING_MODEL_SIMILARITY = False
+
+    # Fallback mock keeps Person 2 workflows unblocked if model assets are unavailable.
+    def skill_similarity(a, b):
+        import random
+
+        random.seed(hash(a + b) % 100)
+        return round(random.uniform(0.3, 0.95), 2)
 
 
-MATCH_THRESHOLD = 0.7
+MATCH_THRESHOLD = 0.6
 
 
 def _normalize(values):
@@ -67,9 +75,11 @@ def _match_skills(required_skills, candidate_skills):
     matched_skills = []
     missing_skills = []
     top_matched_skills = []
+    skill_scores = {}
 
     for req_skill in required_skills:
         best_score = _best_similarity(req_skill, candidate_skills)
+        skill_scores[req_skill] = round(best_score, 3)
         if best_score >= MATCH_THRESHOLD:
             matched_skills.append(req_skill)
             top_matched_skills.append((req_skill, round(best_score, 2)))
@@ -83,7 +93,7 @@ def _match_skills(required_skills, candidate_skills):
             bonus_skills.append(cand_skill)
 
     top_matched_skills = sorted(top_matched_skills, key=lambda item: item[1], reverse=True)
-    return matched_skills, missing_skills, bonus_skills, top_matched_skills
+    return matched_skills, missing_skills, bonus_skills, top_matched_skills, skill_scores
 
 
 def _compute_skill_score(matched_skills, required_skills):
@@ -174,6 +184,7 @@ def _build_why_high(
     matched_skills,
     required_skills,
     candidate_profile,
+    github_matched_skills,
 ):
     messages = []
 
@@ -181,6 +192,12 @@ def _build_why_high(
         f"{len(matched_skills)}/{len(required_skills)} required skills matched "
         f"at threshold >= {MATCH_THRESHOLD}."
     )
+
+    if github_matched_skills:
+        preview = ", ".join(github_matched_skills[:5])
+        messages.append(
+            f"GitHub reveals {len(github_matched_skills)} hidden skills: {preview}"
+        )
 
     if github_score >= 70:
         repo_count = int(candidate_profile.get("github", {}).get("repo_count", 0) or 0)
@@ -252,12 +269,17 @@ def _build_suggestions(missing_skills, github_score, project_score):
 def compute_fit_score(candidate_profile, job_description):
     """Compute candidate-role fit score and explainability output."""
     required_skills = _normalize(job_description.get("required_skills", []))
-    candidate_skills = _normalize(candidate_profile.get("skills", []))
+    resume_skills = _normalize(candidate_profile.get("skills", []))
+    github_languages = _normalize(candidate_profile.get("github", {}).get("languages", []))
+    effective_skills = list(dict.fromkeys(resume_skills + github_languages))
 
-    matched_skills, missing_skills, bonus_skills, top_matched_skills = _match_skills(
+    matched_skills, missing_skills, bonus_skills, top_matched_skills, skill_scores = _match_skills(
         required_skills,
-        candidate_skills,
+        effective_skills,
     )
+
+    resume_skill_set = set(resume_skills)
+    github_matched_skills = [skill for skill in matched_skills if skill not in resume_skill_set]
 
     skill_score = _compute_skill_score(matched_skills, required_skills)
     project_score = _compute_project_score(candidate_profile.get("projects", []), required_skills)
@@ -281,6 +303,7 @@ def compute_fit_score(candidate_profile, job_description):
         matched_skills,
         required_skills,
         candidate_profile,
+        github_matched_skills,
     )
     why_low = _build_why_low(
         skill_score,
@@ -300,7 +323,9 @@ def compute_fit_score(candidate_profile, job_description):
             "education_score": int(education_score),
         },
         "matched_skills": matched_skills,
+        "github_matched_skills": github_matched_skills,
         "top_matched_skills": top_matched_skills,
+        "skill_scores": skill_scores,
         "missing_skills": missing_skills,
         "bonus_skills": bonus_skills,
         "why_high": why_high,
@@ -326,10 +351,9 @@ def test_all_scenarios():
 
     print("\nSCENARIO SUMMARY")
     print("-" * 86)
-    print(
-        "Similarity note: exact skill matches are 1.0; non-exact skill pairs use deterministic "
-        "semantic+lexical similarity."
-    )
+    similarity_source = "Person 1 Word2Vec model" if USING_MODEL_SIMILARITY else "mock fallback"
+    print(f"Similarity source: {similarity_source}")
+    print("Similarity note: exact skill matches are 1.0; non-exact skill pairs use semantic+lexical blending.")
     print(
         f"{'candidate name':<20} | {'fit_score':<9} | {'matched count':<13} | "
         f"{'missing count':<13} | {'github_score':<12}"

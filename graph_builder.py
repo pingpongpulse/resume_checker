@@ -12,115 +12,167 @@ from pyvis.network import Network
 
 from dummy_match import dummy_perfect, dummy_weak, dummy_hidden, job_title
 
+try:
+    from talent_core.person1.utils import skill_similarity
+except Exception:
+    skill_similarity = None
+
 
 def _build_skill_graph(match_result, job_title):
-    """Build a premium NetworkX graph with visual hierarchy and neon styling."""
+    """Build a role-centric NetworkX graph from match results."""
     graph = nx.DiGraph()
 
     fit_score = match_result.get("fit_score", 0)
     matched_skills = match_result.get("matched_skills", [])
     missing_skills = match_result.get("missing_skills", [])
     bonus_skills = match_result.get("bonus_skills", [])
+    skill_scores = match_result.get("skill_scores", {})
+    github_score = match_result.get("breakdown", {}).get("github_score", "N/A")
 
-    # Determine score-based color for connections and theme
-    if fit_score >= 70:
-        accent_color = "#00FF88"  # neon green
-        accent_dim = "#1D9E75"
-    elif fit_score >= 40:
-        accent_color = "#FFD700"  # gold
-        accent_dim = "#CC7700"
-    else:
-        accent_color = "#FF4D4D"  # neon red
-        accent_dim = "#CC0000"
+    matched_set = set(matched_skills)
+    missing_set = set(missing_skills)
+    bonus_set = set(bonus_skills)
+    has_skill_scores = isinstance(skill_scores, dict)
 
-    # Center node: DOMINANT hero node (star, large, glowing)
+    def _score_for_tooltip(skill: str):
+        if not has_skill_scores:
+            return None
+        try:
+            raw = skill_scores.get(skill, None)
+            if raw is None:
+                return None
+            return float(raw)
+        except Exception:
+            return None
+
+    # Center node: role target from Person 3 specification.
     role_label = f"{job_title}\n{fit_score}/100"
+    matched_preview = ", ".join(matched_skills[:8]) if matched_skills else "None"
+    if len(matched_skills) > 8:
+        matched_preview += ", ..."
     graph.add_node(
         "ROLE",
         label=role_label,
-        title=f"🎯 {job_title} — Fit Score: {fit_score}/100",
-        color={"background": "#7F77DD", "border": accent_color},
-        size=60,
+        title=(
+            f"🎯 {job_title}\n"
+            f"Fit Score: {fit_score}/100\n"
+            f"GitHub Score: {github_score}\n"
+            f"Matched Skills ({len(matched_skills)}): {matched_preview}"
+        ),
+        color={"background": "#7F77DD", "border": "#7F77DD"},
+        size=55,
         shape="star",
-        font={"size": 22, "color": "white", "bold": True},
-        borderWidth=3,
+        font={"size": 20, "color": "white", "bold": True},
+        borderWidth=2,
+        borderWidthSelected=4,
+        shadow=True,
     )
 
-    # Matched skills (neon green with glow): size increases with index
-    for idx, skill in enumerate(matched_skills):
-        node_size = 30 + (idx * 2)
+    node_lookup = {}
+
+    for skill in matched_skills:
+        node_id = f"matched_{skill}"
+        node_lookup[skill] = node_id
+        role_score = _score_for_tooltip(skill)
+        score_text = f"{role_score:.2f}" if role_score is not None else "N/A"
         graph.add_node(
-            f"matched_{skill}",
+            node_id,
             label=skill,
-            title=f"✅ {skill} — Candidate has this",
-            color={"background": accent_dim, "border": "#00FFAA"},
-            size=node_size,
+            title=(
+                f"✅ {skill}\n"
+                f"Candidate match score: {score_text}\n"
+                "Status: Matched ✓"
+            ),
+            color={"background": "#1D9E75", "border": "#1D9E75"},
+            size=38,
             font={"size": 13, "color": "white"},
             borderWidth=2,
+            borderWidthSelected=4,
+            shadow=True,
         )
-        # Strong solid edges to matched skills
         graph.add_edge(
             "ROLE",
-            f"matched_{skill}",
-            color=accent_color,
+            node_id,
+            color="#1D9E75",
             width=3,
             dashes=False,
+            label="matched",
         )
 
-    # Missing skills (neon red with dashed): uniform size
     for skill in missing_skills:
+        node_id = f"missing_{skill}"
+        node_lookup[skill] = node_id
+        role_score = _score_for_tooltip(skill)
+        score_text = f"{role_score:.2f}" if role_score is not None else "N/A"
         graph.add_node(
-            f"missing_{skill}",
+            node_id,
             label=skill,
-            title=f"❌ {skill} — Gap to fill",
-            color={"background": "#CC0000", "border": "#FF4D4D"},
-            size=22,
+            title=(
+                f"❌ {skill}\n"
+                f"Best candidate match: {score_text}\n"
+                "Status: GAP — candidate lacks this skill"
+            ),
+            color={"background": "#E24B4A", "border": "#E24B4A"},
+            size=30,
             font={"size": 13, "color": "white"},
             borderWidth=2,
         )
-        # Weaker dashed edges to missing skills
         graph.add_edge(
             "ROLE",
-            f"missing_{skill}",
-            color="#FF4D4D",
+            node_id,
+            color="#E24B4A",
             width=2,
             dashes=True,
+            label="gap",
         )
 
-    # Bonus skills (neon blue): smaller size
     for skill in bonus_skills:
+        node_id = f"bonus_{skill}"
+        node_lookup[skill] = node_id
         graph.add_node(
-            f"bonus_{skill}",
+            node_id,
             label=skill,
-            title=f"⭐ {skill} — Extra value",
-            color={"background": "#0066FF", "border": "#4DA6FF"},
-            size=18,
+            title=(
+                f"⭐ {skill}\n"
+                "Status: Bonus — extra value beyond requirements"
+            ),
+            color={"background": "#378ADD", "border": "#378ADD"},
+            size=28,
             font={"size": 12, "color": "white"},
             borderWidth=2,
         )
         graph.add_edge(
             "ROLE",
-            f"bonus_{skill}",
-            color="#4DA6FF",
-            width=1.5,
+            node_id,
+            color="#378ADD",
+            width=1,
             dashes=False,
+            label="bonus",
         )
 
-    # Add glowing similarity edges between matched skills (width based on importance)
-    all_matched = matched_skills
-    for i, skill1 in enumerate(all_matched[:4]):
-        for j, skill2 in enumerate(all_matched[i + 1 : min(i + 3, len(all_matched))]):
-            node1 = f"matched_{skill1}"
-            node2 = f"matched_{skill2}"
-            # Similarity width: closer skills get thicker edges
-            similarity_width = max(2 - (j * 0.5), 0.5)
-            graph.add_edge(
-                node1,
-                node2,
-                color="#888888",
-                width=similarity_width,
-                hidden=False,
-            )
+    # Bonus: semantic links from Person 1 similarity model.
+    if skill_similarity is not None:
+        all_skills = list(node_lookup.keys())
+        for i, skill_a in enumerate(all_skills):
+            for skill_b in all_skills[i + 1 :]:
+                # Skip edges between two gap skills and only connect pairs where
+                # at least one side is matched or bonus.
+                if skill_a in missing_set and skill_b in missing_set:
+                    continue
+                if not ((skill_a in matched_set or skill_a in bonus_set) or (skill_b in matched_set or skill_b in bonus_set)):
+                    continue
+                try:
+                    sim = float(skill_similarity(skill_a, skill_b))
+                except Exception:
+                    continue
+                if sim >= 0.7:
+                    graph.add_edge(
+                        node_lookup[skill_a],
+                        node_lookup[skill_b],
+                        color="#808080",
+                        width=round(sim * 3, 2),
+                        title=f"semantic similarity: {sim:.2f}",
+                    )
 
     return graph
 
@@ -153,13 +205,13 @@ def _inject_html_styling(html_file_path, fit_score):
 
     # Determine badge color based on fit_score
     if fit_score >= 70:
-        badge_color = "#28a745"  # green
+        badge_color = "#28a745"
         badge_text = "Strong Fit"
     elif fit_score >= 40:
-        badge_color = "#ffc107"  # yellow
+        badge_color = "#f0a500"
         badge_text = "Moderate Fit"
     else:
-        badge_color = "#dc3545"  # red
+        badge_color = "#dc3545"
         badge_text = "Weak Fit"
 
     # Custom CSS and HTML to inject
@@ -167,48 +219,79 @@ def _inject_html_styling(html_file_path, fit_score):
     <style>
         body {{
             background: #0d1117;
-            margin: 0;
-            padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }}
         #title-bar {{
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            height: 44px;
+            background: rgba(13,17,23,0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #30363d;
             color: white;
-            padding: 16px 24px;
-            font-size: 20px;
+            padding: 0 14px;
+            font-size: 15px;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 0;
+            pointer-events: none;
         }}
         #score-badge {{
             background: {badge_color};
             color: white;
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
         }}
-        #score-badge::before {{
-            content: "📊";
+        #legend-bar {{
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            height: 36px;
+            background: rgba(13,17,23,0.85);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            font-size: 13px;
+            gap: 20px;
         }}
-        #graph-container {{
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 60px);
+        #mynetwork {{
+            padding-top: 0 !important;
         }}
     </style>
     <div id="title-bar">
-        <span>🧠 Talent Intelligence — Skill Graph</span>
-        <div id="score-badge">{fit_score}/100 — {badge_text}</div>
+        <span>Talent Intelligence — Skill Graph</span>
+        <div id="score-badge">🎯 {fit_score}/100 — {badge_text}</div>
     </div>
-    <div id="graph-container">
+    <div id="legend-bar">
+        <span>🟢 Matched</span>
+        <span>🔴 Gap</span>
+        <span>🔵 Bonus</span>
+        <span>⭐ Role</span>
+    </div>
     """
+
+    # Ensure body fills viewport without extra scroll/margins.
+    html_content = re.sub(
+        r"<body[^>]*>",
+        '<body style="margin:0; padding:0; overflow:hidden;">',
+        html_content,
+        count=1,
+    )
 
     # Insert custom HTML before </body>
     html_content = html_content.replace("</body>", custom_html + "</body>")
@@ -216,8 +299,9 @@ def _inject_html_styling(html_file_path, fit_score):
     # Adjust the graph container div to have the proper height
     html_content = re.sub(
         r'<div id="mynetwork"[^>]*>',
-        '<div id="mynetwork" style="width: 100%; height: 100%;">',
+        '<div id="mynetwork" style="width: 100%; height: calc(100vh - 60px); min-height: 500px;">',
         html_content,
+        count=1,
     )
 
     with open(html_file_path, "w", encoding="utf-8") as f:
@@ -256,7 +340,7 @@ def render_match_graph(match_result, candidate_name, job_title, output_dir="grap
     # Create premium Pyvis network with enhanced styling
     net = Network(
         directed=True,
-        height="700px",
+        height="100vh",
         width="100%",
         bgcolor="#0d1117",
         font_color="white",
@@ -273,13 +357,14 @@ def render_match_graph(match_result, candidate_name, job_title, output_dir="grap
         {
             "physics": {
                 "enabled": true,
-                "forceAtlas2Based": {
-                    "gravitationalConstant": -26,
-                    "centralGravity": 0.3,
+                "solver": "barnesHut",
+                "barnesHut": {
+                    "gravitationalConstant": -12000,
+                    "centralGravity": 0.1,
                     "springLength": 200,
-                    "springConstant": 0.05,
-                    "dissuadeHubs": true,
-                    "overlap": 0.5
+                    "springConstant": 0.04,
+                    "damping": 0.15,
+                    "avoidOverlap": 0.2
                 },
                 "maxVelocity": 50,
                 "stabilization": {
@@ -308,6 +393,27 @@ def render_match_graph(match_result, candidate_name, job_title, output_dir="grap
     _inject_html_styling(output_file, fit_score)
 
     return output_file, analytics
+
+
+def build_skill_graph(match_result, job_title, output_dir="graph_output"):
+    """Backward-compatible graph API expected by verification scripts.
+
+    Saves graph_output/skill_graph.html and returns analytics.
+    """
+    output_file = os.path.join(output_dir, "skill_graph.html")
+    _, analytics = render_match_graph(
+        match_result,
+        candidate_name="skill_graph",
+        job_title=job_title,
+        output_dir=output_dir,
+        scenario_type=None,
+    )
+
+    generated_file = os.path.join(output_dir, "skill_graph_graph.html")
+    if os.path.exists(generated_file):
+        os.replace(generated_file, output_file)
+
+    return analytics
 
 
 if __name__ == "__main__":

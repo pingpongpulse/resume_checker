@@ -33,7 +33,7 @@
 
              #mynetwork {
                  width: 100%;
-                 height: 700px;
+                 height: 100vh;
                  background-color: #0d1117;
                  border: 1px solid lightgray;
                  position: relative;
@@ -49,11 +49,11 @@
     </head>
 
 
-    <body>
+    <body style="margin:0; padding:0; overflow:hidden;">
         <div class="card" style="width: 100%">
             
             
-            <div id="mynetwork" style="width: 100%; height: 100%;"></div>
+            <div id="mynetwork" style="width: 100%; height: calc(100vh - 60px); min-height: 500px;"></div>
         </div>
 
         
@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"borderWidth": 3, "color": {"background": "#7F77DD", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "ROLE", "label": "Backend Engineer\n34/100", "shape": "star", "size": 60, "title": "\ud83c\udfaf Backend Engineer \u2014 Fit Score: 34/100"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#00FFAA"}, "font": {"color": "white"}, "id": "matched_python", "label": "python", "shape": "dot", "size": 30, "title": "\u2705 python \u2014 Candidate has this"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "missing_fastapi", "label": "fastapi", "shape": "dot", "size": 22, "title": "\u274c fastapi \u2014 Gap to fill"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "missing_postgresql", "label": "postgresql", "shape": "dot", "size": 22, "title": "\u274c postgresql \u2014 Gap to fill"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "missing_docker", "label": "docker", "shape": "dot", "size": 22, "title": "\u274c docker \u2014 Gap to fill"}, {"borderWidth": 2, "color": {"background": "#CC0000", "border": "#FF4D4D"}, "font": {"color": "white"}, "id": "missing_kubernetes", "label": "kubernetes", "shape": "dot", "size": 22, "title": "\u274c kubernetes \u2014 Gap to fill"}, {"borderWidth": 2, "color": {"background": "#0066FF", "border": "#4DA6FF"}, "font": {"color": "white"}, "id": "bonus_html", "label": "html", "shape": "dot", "size": 18, "title": "\u2b50 html \u2014 Extra value"}, {"borderWidth": 2, "color": {"background": "#0066FF", "border": "#4DA6FF"}, "font": {"color": "white"}, "id": "bonus_css", "label": "css", "shape": "dot", "size": 18, "title": "\u2b50 css \u2014 Extra value"}]);
-                  edges = new vis.DataSet([{"arrows": "to", "color": "#FF4D4D", "dashes": false, "from": "ROLE", "to": "matched_python", "width": 1}, {"arrows": "to", "color": "#FF4D4D", "dashes": true, "from": "ROLE", "to": "missing_fastapi", "width": 1}, {"arrows": "to", "color": "#FF4D4D", "dashes": true, "from": "ROLE", "to": "missing_postgresql", "width": 1}, {"arrows": "to", "color": "#FF4D4D", "dashes": true, "from": "ROLE", "to": "missing_docker", "width": 1}, {"arrows": "to", "color": "#FF4D4D", "dashes": true, "from": "ROLE", "to": "missing_kubernetes", "width": 1}, {"arrows": "to", "color": "#4DA6FF", "dashes": false, "from": "ROLE", "to": "bonus_html", "width": 1}, {"arrows": "to", "color": "#4DA6FF", "dashes": false, "from": "ROLE", "to": "bonus_css", "width": 1}]);
+                  nodes = new vis.DataSet([{"borderWidth": 2, "borderWidthSelected": 4, "color": {"background": "#7F77DD", "border": "#7F77DD"}, "font": {"color": "white"}, "id": "ROLE", "label": "Backend Engineer\n34/100", "shadow": true, "shape": "star", "size": 55, "title": "Backend Engineer - Fit Score: 34/100"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": {"background": "#1D9E75", "border": "#1D9E75"}, "font": {"color": "white"}, "id": "matched_python", "label": "python", "shadow": true, "shape": "dot", "size": 38, "title": "\u2705 python\nSimilarity to role: 1.00\nStatus: Matched"}, {"borderWidth": 2, "color": {"background": "#E24B4A", "border": "#E24B4A"}, "font": {"color": "white"}, "id": "missing_fastapi", "label": "fastapi", "shape": "dot", "size": 30, "title": "\u274c fastapi\nBest similarity found: 0.88\nStatus: Gap \u2014 not in candidate profile"}, {"borderWidth": 2, "color": {"background": "#E24B4A", "border": "#E24B4A"}, "font": {"color": "white"}, "id": "missing_postgresql", "label": "postgresql", "shape": "dot", "size": 30, "title": "\u274c postgresql\nBest similarity found: 0.61\nStatus: Gap \u2014 not in candidate profile"}, {"borderWidth": 2, "color": {"background": "#E24B4A", "border": "#E24B4A"}, "font": {"color": "white"}, "id": "missing_docker", "label": "docker", "shape": "dot", "size": 30, "title": "\u274c docker\nBest similarity found: 0.30\nStatus: Gap \u2014 not in candidate profile"}, {"borderWidth": 2, "color": {"background": "#E24B4A", "border": "#E24B4A"}, "font": {"color": "white"}, "id": "missing_kubernetes", "label": "kubernetes", "shape": "dot", "size": 30, "title": "\u274c kubernetes\nBest similarity found: 0.29\nStatus: Gap \u2014 not in candidate profile"}, {"borderWidth": 2, "color": {"background": "#378ADD", "border": "#378ADD"}, "font": {"color": "white"}, "id": "bonus_html", "label": "html", "shape": "dot", "size": 28, "title": "\u2b50 html\nStatus: Bonus skill\nNot required but adds value"}, {"borderWidth": 2, "color": {"background": "#378ADD", "border": "#378ADD"}, "font": {"color": "white"}, "id": "bonus_css", "label": "css", "shape": "dot", "size": 28, "title": "\u2b50 css\nStatus: Bonus skill\nNot required but adds value"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#1D9E75", "dashes": false, "from": "ROLE", "label": "matched", "to": "matched_python", "width": 1}, {"arrows": "to", "color": "#E24B4A", "dashes": true, "from": "ROLE", "label": "gap", "to": "missing_fastapi", "width": 1}, {"arrows": "to", "color": "#E24B4A", "dashes": true, "from": "ROLE", "label": "gap", "to": "missing_postgresql", "width": 1}, {"arrows": "to", "color": "#E24B4A", "dashes": true, "from": "ROLE", "label": "gap", "to": "missing_docker", "width": 1}, {"arrows": "to", "color": "#E24B4A", "dashes": true, "from": "ROLE", "label": "gap", "to": "missing_kubernetes", "width": 1}, {"arrows": "to", "color": "#378ADD", "dashes": false, "from": "ROLE", "label": "bonus", "to": "bonus_html", "width": 1}, {"arrows": "to", "color": "#378ADD", "dashes": false, "from": "ROLE", "label": "bonus", "to": "bonus_css", "width": 1}, {"arrows": "to", "color": "#808080", "from": "matched_python", "title": "semantic similarity: 0.88", "to": "missing_fastapi", "width": 1}, {"arrows": "to", "color": "#808080", "from": "bonus_html", "title": "semantic similarity: 0.86", "to": "bonus_css", "width": 1}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -100,7 +100,7 @@
                   // adding nodes and edges to the graph
                   data = {nodes: nodes, edges: edges};
 
-                  var options = {"physics": {"enabled": true, "forceAtlas2Based": {"gravitationalConstant": -26, "centralGravity": 0.3, "springLength": 200, "springConstant": 0.05, "dissuadeHubs": true, "overlap": 0.5}, "maxVelocity": 50, "stabilization": {"enabled": true, "iterations": 200, "fit": true}, "timestep": 0.35, "adaptiveTimestep": true}, "interaction": {"hover": true, "navigationButtons": true, "keyboard": true, "zoomView": true}};
+                  var options = {"physics": {"enabled": true, "solver": "barnesHut", "barnesHut": {"gravitationalConstant": -12000, "centralGravity": 0.1, "springLength": 200, "springConstant": 0.04, "damping": 0.15, "avoidOverlap": 0.2}, "maxVelocity": 50, "stabilization": {"enabled": true, "iterations": 200, "fit": true}, "timestep": 0.35, "adaptiveTimestep": true}, "interaction": {"hover": true, "navigationButtons": true, "keyboard": true, "zoomView": true}};
 
                   
 
@@ -127,46 +127,69 @@
     <style>
         body {
             background: #0d1117;
-            margin: 0;
-            padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         #title-bar {
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            height: 44px;
+            background: rgba(13,17,23,0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #30363d;
             color: white;
-            padding: 16px 24px;
-            font-size: 20px;
+            padding: 0 14px;
+            font-size: 15px;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 0;
+            pointer-events: none;
         }
         #score-badge {
             background: #dc3545;
             color: white;
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        #score-badge::before {
-            content: "📊";
+        #legend-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            height: 36px;
+            background: rgba(13,17,23,0.85);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            font-size: 13px;
+            gap: 20px;
         }
-        #graph-container {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 60px);
+        #mynetwork {
+            padding-top: 0 !important;
         }
     </style>
     <div id="title-bar">
-        <span>🧠 Talent Intelligence — Skill Graph</span>
-        <div id="score-badge">34/100 — Weak Fit</div>
+        <span>Talent Intelligence — Skill Graph</span>
+        <div id="score-badge">🎯 34/100 — Weak Fit</div>
     </div>
-    <div id="graph-container">
+    <div id="legend-bar">
+        <span>🟢 Matched</span>
+        <span>🔴 Gap</span>
+        <span>🔵 Bonus</span>
+        <span>⭐ Role</span>
+    </div>
     </body>
 </html>
